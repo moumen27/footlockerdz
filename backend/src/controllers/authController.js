@@ -21,25 +21,46 @@ export const registerUser = async (req, res) => {
       email,
       password,
       phone,
-      isVerified: true,
+      isVerified: false,
     });
 
     if (user) {
-      // Tentative d'envoi en arrière-plan sans bloquer la réponse HTTP
-      sendEmail({
-        email: user.email,
-        subject: 'Bienvenue sur FootLockerDZ',
-        message: 'Bienvenue sur FootLockerDZ ! Votre compte est actif.',
-        html: `<p>Bienvenue sur FootLockerDZ !</p><p>Votre compte est actif et prêt à l'emploi.</p>`,
-      }).catch((err) => console.log('Note: envoi email ignoré ou bloqué:', err.message));
+      // Générer le token de vérification
+      const verificationToken = user.getVerificationToken();
+      await user.save({ validateBeforeSave: false });
+
+      // Envoyer l'email de vérification
+      const verifyUrl = `${process.env.FRONTEND_URL || 'https://footlockerdz.vercel.app'}/verify/${verificationToken}`;
+      const message = `Vous avez créé un compte sur FootLockerDZ. Cliquez sur ce lien pour vérifier votre adresse email : \n\n ${verifyUrl}`;
+
+      try {
+        await sendEmail({
+          email: user.email,
+          subject: 'Vérifiez votre adresse email - FootLockerDZ',
+          message,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e0e0e0; border-radius: 10px;">
+              <h2 style="color: #006233; text-align: center;">Bienvenue sur FootLockerDZ !</h2>
+              <p>Bonjour <strong>${user.name || 'Cher client'}</strong>,</p>
+              <p>Merci d'avoir créé un compte sur notre boutique. Pour activer votre compte et commencer vos achats, veuillez confirmer votre adresse email :</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${verifyUrl}" style="background-color: #006233; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Activer mon compte</a>
+              </div>
+              <p style="color: #666; font-size: 13px;">Si le bouton ne fonctionne pas, cliquez sur ce lien :<br><a href="${verifyUrl}">${verifyUrl}</a></p>
+            </div>
+          `,
+        });
+      } catch (err) {
+        console.error("Erreur lors de l'envoi de l'email :", err.message);
+      }
 
       res.status(201).json({
         success: true,
-        message: 'Compte créé avec succès !',
+        message: 'Un lien de vérification a été envoyé à votre adresse email. Veuillez cliquer dessus pour activer votre compte.',
         _id: user._id,
         name: user.name,
         email: user.email,
-        isVerified: true,
+        isVerified: false,
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
@@ -64,10 +85,9 @@ export const loginUser = async (req, res) => {
         return res.status(403).json({ message: 'Votre compte a été suspendu par le Super Admin.' });
       }
 
-      // Activer automatiquement le compte s'il n'était pas vérifié
+      // Bloquer si non vérifié
       if (!user.isVerified) {
-        user.isVerified = true;
-        await user.save({ validateBeforeSave: false });
+        return res.status(401).json({ message: 'Veuillez vérifier votre email avant de vous connecter.' });
       }
 
       generateToken(res, user._id);
