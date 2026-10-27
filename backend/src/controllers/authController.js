@@ -21,38 +21,25 @@ export const registerUser = async (req, res) => {
       email,
       password,
       phone,
+      isVerified: true,
     });
 
     if (user) {
-      // Générer le token de vérification
-      const verificationToken = user.getVerificationToken();
-      await user.save({ validateBeforeSave: false });
-
-      // Envoyer l'email de vérification
-      const verifyUrl = `${process.env.FRONTEND_URL}/verify/${verificationToken}`;
-      const message = `Vous avez créé un compte sur FootLockerDZ. Cliquez sur ce lien pour vérifier votre adresse email : \n\n ${verifyUrl}`;
-
-      try {
-        await sendEmail({
-          email: user.email,
-          subject: 'Vérifiez votre adresse email',
-          message,
-          html: `<p>Vous avez créé un compte sur FootLockerDZ.</p><p>Cliquez sur ce lien pour vérifier votre adresse email :</p><a href="${verifyUrl}" target="_blank">Vérifier mon compte</a>`,
-        });
-      } catch (err) {
-        console.error(err);
-        user.verificationToken = undefined;
-        await user.save({ validateBeforeSave: false });
-        // On continue même si l'email échoue pour le moment, ou on peut renvoyer une erreur
-      }
+      // Tentative d'envoi en arrière-plan sans bloquer la réponse HTTP
+      sendEmail({
+        email: user.email,
+        subject: 'Bienvenue sur FootLockerDZ',
+        message: 'Bienvenue sur FootLockerDZ ! Votre compte est actif.',
+        html: `<p>Bienvenue sur FootLockerDZ !</p><p>Votre compte est actif et prêt à l'emploi.</p>`,
+      }).catch((err) => console.log('Note: envoi email ignoré ou bloqué:', err.message));
 
       res.status(201).json({
         success: true,
-        message: 'Veuillez vérifier votre email pour activer votre compte.',
+        message: 'Compte créé avec succès !',
         _id: user._id,
         name: user.name,
         email: user.email,
-        isVerified: user.isVerified,
+        isVerified: true,
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
@@ -72,14 +59,15 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await user.matchPassword(password))) {
-      // Bloquer si non vérifié (selon votre demande)
-      if (!user.isVerified) {
-        return res.status(401).json({ message: 'Veuillez vérifier votre email avant de vous connecter.' });
-      }
-
       // Bloquer si le compte est suspendu
       if (user.isBlocked) {
         return res.status(403).json({ message: 'Votre compte a été suspendu par le Super Admin.' });
+      }
+
+      // Activer automatiquement le compte s'il n'était pas vérifié
+      if (!user.isVerified) {
+        user.isVerified = true;
+        await user.save({ validateBeforeSave: false });
       }
 
       generateToken(res, user._id);
