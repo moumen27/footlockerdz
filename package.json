@@ -1,0 +1,8 @@
+{
+  "name": "projet-final",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ]
+}

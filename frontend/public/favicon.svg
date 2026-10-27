@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#09090b" />
+      <stop offset="100%" stop-color="#18181b" />
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22c55e" />
+      <stop offset="100%" stop-color="#15803d" />
+    </linearGradient>
+  </defs>
+  <!-- Background badge -->
+  <rect width="64" height="64" rx="14" fill="url(#bgGrad)"/>
+  <rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#27272a" stroke-width="1.5"/>
+
+  <!-- Sneaker Silhouette (White) -->
+  <path d="M12 36 C13 29, 17 24, 23 23 C26.5 22.5, 29 25, 32 25.5 C36 24, 43 27.5, 48 32 C51.5 35, 52 38, 52 40 C49 41.5, 41 41.5, 34 41.5 C24 41.5, 16 40, 12 36 Z" fill="#FFFFFF"/>
+
+  <!-- Dynamic Green Swoosh (Algeria Green) -->
+  <path d="M9 43 C15 44, 23 41, 30 35 C37 29, 45 27, 55 28 C47 32, 38 37, 30 43.5 C21 48, 13 47, 9 43 Z" fill="url(#greenGrad)"/>
+
+  <!-- Sneaker Collar & Laces Details -->
+  <path d="M22 25 L21 28" stroke="#09090b" stroke-width="2" stroke-linecap="round"/>
+  <path d="M27 25 L26 28" stroke="#09090b" stroke-width="2" stroke-linecap="round"/>
+  <path d="M32 26 L31 29" stroke="#09090b" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Red Accent Underline / DZ Badge Accent -->
+  <rect x="42" y="44" width="12" height="3" rx="1.5" fill="#ef4444"/>
+</svg>
