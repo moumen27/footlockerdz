@@ -3,6 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import axiosInstance from '../api/axios';
 
 const AdminRoute = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -14,11 +15,8 @@ const AdminRoute = () => {
   React.useEffect(() => {
     const checkMaintenance = async () => {
       try {
-        // Pour éviter une dépendance circulaire ou un import non défini si axiosInstance n'est pas dispo,
-        // on importe axiosInstance localement, mais on l'a importé en haut ou non?
-        // Je vais utiliser window.fetch ou ajouter l'import
-        const response = await fetch('http://localhost:5000/api/settings');
-        const data = await response.json();
+        const response = await axiosInstance.get('/settings');
+        const data = response.data;
         if (data?.maintenanceFlag) {
           setIsMaintenance(true);
         }
